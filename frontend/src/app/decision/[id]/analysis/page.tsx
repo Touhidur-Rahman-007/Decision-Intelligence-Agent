@@ -3,7 +3,6 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { OutcomeCards } from '@/components/OutcomeCards';
-import { RadarChart } from '@/components/RadarChart';
 import { RecommendationPanel } from '@/components/RecommendationPanel';
 import { RevealSection } from '@/components/RevealSection';
 import { RiskMeters } from '@/components/RiskMeters';
@@ -225,21 +224,12 @@ export default function AnalysisPage() {
           index={1}
           activeIndex={activeSection}
         >
-          <div className="grid">
-            <div className="card" style={{ alignItems: 'center' }}>
-              <RadarChart
-                options={result.options}
-                criteria={result.criteria}
-                scores={result.scores}
-              />
-            </div>
-            <div className="card" style={{ overflowX: 'auto' }}>
-              <ScoreMatrix
-                options={result.options}
-                criteria={result.criteria}
-                scores={result.scores}
-              />
-            </div>
+          <div className="card" style={{ overflowX: 'auto' }}>
+            <ScoreMatrix
+              options={result.options}
+              criteria={result.criteria}
+              scores={result.scores}
+            />
           </div>
         </RevealSection>
 

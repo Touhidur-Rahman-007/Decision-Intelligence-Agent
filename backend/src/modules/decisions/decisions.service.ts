@@ -11,7 +11,7 @@ import { GroqService } from '../groq/groq.service';
 import { DecisionStatus } from './decision-status.enum';
 import { Decision } from './decision.entity';
 
-const MAX_INTAKE_QUESTIONS = 6;
+const MAX_INTAKE_QUESTIONS = 3;
 
 @Injectable()
 export class DecisionsService {
