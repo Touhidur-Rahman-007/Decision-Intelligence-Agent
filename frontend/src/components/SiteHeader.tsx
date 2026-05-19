@@ -6,7 +6,9 @@ import { useAuth } from '@/lib/auth';
 
 const publicLinks: Array<{ href: string; label: string }> = [];
 
-const userLinks: Array<{ href: string; label: string }> = [];
+const userLinks: Array<{ href: string; label: string }> = [
+  { href: '/dashboard', label: 'Dashboard' }
+];
 
 export function SiteHeader() {
   const pathname = usePathname();
