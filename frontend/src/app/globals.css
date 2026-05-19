@@ -179,6 +179,11 @@ a {
   gap: 48px;
   padding: 70px 0 60px;
   align-items: center;
+  justify-items: start;
+}
+
+.hero > div:first-child {
+  max-width: 560px;
 }
 
 .hero-title {
@@ -258,6 +263,11 @@ a {
   gap: 12px;
 }
 
+.field-error {
+  color: #b42318;
+  font-size: 12px;
+}
+
 .card h3 {
   font-size: 18px;
 }
@@ -294,6 +304,13 @@ a {
   font-family: var(--font-display);
   font-size: 15px;
   background: var(--surface);
+  color: var(--ink);
+  caret-color: var(--accent);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--muted);
 }
 
 .textarea {
@@ -346,6 +363,58 @@ a {
   color: var(--ink);
   border-color: rgba(0, 194, 255, 0.4);
   background: rgba(0, 194, 255, 0.1);
+}
+
+.intake {
+  margin-top: 28px;
+  display: grid;
+  gap: 20px;
+}
+
+.intake-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--stroke);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 12px;
+}
+
+.intake-label {
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+.intake-question {
+  font-size: 18px;
+}
+
+.qa-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.qa-item {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke);
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.qa-label {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.qa-text {
+  font-size: 14px;
 }
 
 .reveal {

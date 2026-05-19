@@ -2,16 +2,22 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { DecisionSummary } from '@/lib/types';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { token, user, loading } = useAuth();
   const [decisions, setDecisions] = useState<DecisionSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/auth/login?next=/dashboard');
+      return;
+    }
     if (!token) {
       return;
     }
@@ -21,21 +27,14 @@ export default function DashboardPage() {
       .catch((err) =>
         setError(err instanceof Error ? err.message : 'Failed to load decisions'),
       );
-  }, [token]);
+  }, [token, loading, user, router]);
 
   if (loading) {
     return <div className="container section">Loading...</div>;
   }
 
   if (!user) {
-    return (
-      <div className="container section">
-        <h1 className="section-title">Sign in required</h1>
-        <p className="section-subtitle">
-          Please <Link href="/auth/login">sign in</Link> to view your decisions.
-        </p>
-      </div>
-    );
+    return <div className="container section">Redirecting to sign in...</div>;
   }
 
   return (

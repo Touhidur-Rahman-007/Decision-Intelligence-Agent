@@ -9,7 +9,9 @@ import {
 } from '@nestjs/common';
 import { RequestUser } from '../../common/decorators/request-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { AnswerIntakeDto } from './dto/answer-intake.dto';
 import { CreateDecisionDto } from './dto/create-decision.dto';
+import { StartIntakeDto } from './dto/start-intake.dto';
 import { DecisionsService } from './decisions.service';
 
 @Controller('decisions')
@@ -28,6 +30,26 @@ export class DecisionsController {
     @Body() payload: CreateDecisionDto,
   ) {
     return this.decisionsService.createDecision(user.id, payload.scenarioText);
+  }
+
+  @Post('intake/start')
+  startIntake(
+    @RequestUser() user: { id: string },
+    @Body() payload: StartIntakeDto,
+  ) {
+    return this.decisionsService.startIntake(user.id, payload.scenarioText);
+  }
+
+  @Post('intake/answer')
+  answerIntake(
+    @RequestUser() user: { id: string },
+    @Body() payload: AnswerIntakeDto,
+  ) {
+    return this.decisionsService.answerIntake(
+      user.id,
+      payload.decisionId,
+      payload.answer,
+    );
   }
 
   @Get(':id')

@@ -3,7 +3,7 @@ export type UserRole = 'user' | 'admin';
 export type UserProfile = {
   id: string;
   name: string;
-  email: string;
+  username: string;
   role: UserRole;
   createdAt: string;
 };
@@ -36,4 +36,15 @@ export type AnalysisResult = {
 
 export type DecisionDetail = DecisionSummary & {
   result?: AnalysisResult;
+};
+
+export type IntakeResponse = {
+  decisionId: string;
+  done: boolean;
+  question?: string;
+};
+
+export type IntakeEntry = {
+  question: string;
+  answer: string;
 };

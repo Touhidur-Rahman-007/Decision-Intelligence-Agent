@@ -26,6 +26,18 @@ export class Decision {
   @Column({ name: 'scenario_text', type: 'text' })
   scenarioText: string;
 
+  @Column({ name: 'intake_history', type: 'jsonb', default: () => "'[]'::jsonb" })
+  intakeHistory: Array<{ question: string; answer: string }>;
+
+  @Column({ name: 'intake_last_question', type: 'text', nullable: true })
+  intakeLastQuestion: string | null;
+
+  @Column({ name: 'intake_summary', type: 'text', nullable: true })
+  intakeSummary: string | null;
+
+  @Column({ name: 'intake_complete', type: 'boolean', default: false })
+  intakeComplete: boolean;
+
   @Column({
     type: 'enum',
     enum: DecisionStatus,

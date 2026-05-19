@@ -21,19 +21,38 @@ export default function AdminPage() {
       return;
     }
 
-    setLoading(true);
-    Promise.all([
-      apiRequest<UserProfile[]>('/admin/users', { token }),
-      apiRequest<AdminDecision[]>('/admin/decisions', { token }),
-    ])
-      .then(([usersData, decisionsData]) => {
+    let isActive = true;
+
+    const loadAdmin = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [usersData, decisionsData] = await Promise.all([
+          apiRequest<UserProfile[]>('/admin/users', { token }),
+          apiRequest<AdminDecision[]>('/admin/decisions', { token }),
+        ]);
+        if (!isActive) {
+          return;
+        }
         setUsers(usersData);
         setDecisions(decisionsData);
-      })
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : 'Admin fetch failed'),
-      )
-      .finally(() => setLoading(false));
+      } catch (err) {
+        if (!isActive) {
+          return;
+        }
+        setError(err instanceof Error ? err.message : 'Admin fetch failed');
+      } finally {
+        if (isActive) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadAdmin();
+
+    return () => {
+      isActive = false;
+    };
   }, [token, user]);
 
   if (!user || user.role !== 'admin') {
@@ -64,7 +83,7 @@ export default function AdminPage() {
               </span>
               <h3>{decision.scenarioText}</h3>
               <p style={{ color: 'var(--muted)' }}>
-                {decision.user?.email ?? 'Unknown'}
+                {decision.user?.username ?? 'Unknown'}
               </p>
             </div>
           ))}

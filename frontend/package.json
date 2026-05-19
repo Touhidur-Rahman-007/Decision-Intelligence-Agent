@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3002",
+    "dev:clean": "npx kill-port 3000 3002 && next dev -p 3002",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -20,6 +21,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "kill-port": "^2.0.1",
     "typescript": "^5"
   }
 }

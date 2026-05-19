@@ -16,8 +16,8 @@ export class User {
   @Column({ length: 120 })
   name: string;
 
-  @Column({ unique: true })
-  email: string;
+  @Column({ unique: true, length: 80 })
+  username: string;
 
   @Column({ name: 'hashed_password' })
   hashedPassword: string;

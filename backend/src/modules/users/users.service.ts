@@ -6,7 +6,7 @@ import { User } from './user.entity';
 
 export type CreateUserInput = {
   name: string;
-  email: string;
+  username: string;
   hashedPassword: string;
   role?: UserRole;
 };
@@ -20,15 +20,15 @@ export class UsersService {
   async createUser(data: CreateUserInput): Promise<User> {
     const user = this.usersRepo.create({
       name: data.name,
-      email: data.email,
+      username: data.username,
       hashedPassword: data.hashedPassword,
       role: data.role ?? UserRole.User,
     });
     return this.usersRepo.save(user);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepo.findOne({ where: { email } });
+  async findByUsername(username: string): Promise<User | null> {
+    return this.usersRepo.findOne({ where: { username } });
   }
 
   async findById(id: string): Promise<User | null> {
@@ -43,7 +43,7 @@ export class UsersService {
     return {
       id: user.id,
       name: user.name,
-      email: user.email,
+      username: user.username,
       role: user.role,
       createdAt: user.createdAt,
     };

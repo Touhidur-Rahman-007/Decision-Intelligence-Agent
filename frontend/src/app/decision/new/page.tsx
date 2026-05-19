@@ -5,42 +5,30 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { DecisionDetail } from '@/lib/types';
-
-const steps = [
-  'Reading your decision',
-  'Identifying evaluation criteria',
-  'Scoring each option',
-  'Detecting trade-offs',
-  'Estimating risks',
-  'Simulating outcomes',
-  'Generating recommendation',
-];
+import { IntakeEntry, IntakeResponse } from '@/lib/types';
 
 export default function NewDecisionPage() {
   const router = useRouter();
   const { token, user, loading } = useAuth();
   const [scenario, setScenario] = useState('');
+  const [decisionId, setDecisionId] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<string | null>(null);
+  const [currentAnswer, setCurrentAnswer] = useState('');
+  const [history, setHistory] = useState<IntakeEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
   const trimmedScenario = scenario.trim();
   const isValidScenario = trimmedScenario.length >= 5;
+  const trimmedAnswer = currentAnswer.trim();
+  const isValidAnswer = trimmedAnswer.length >= 1;
 
   useEffect(() => {
-    if (!submitting) {
-      setActiveStep(0);
-      return;
+    if (!loading && !user) {
+      router.replace('/auth/login?next=/decision/new');
     }
+  }, [loading, user, router]);
 
-    const interval = setInterval(() => {
-      setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
-    }, 700);
-
-    return () => clearInterval(interval);
-  }, [submitting]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleScenarioSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!token) {
       setError('Please sign in before creating a decision.');
@@ -55,15 +43,68 @@ export default function NewDecisionPage() {
     setSubmitting(true);
 
     try {
-      const decision = await apiRequest<DecisionDetail>('/decisions', {
+      const intake = await apiRequest<IntakeResponse>('/decisions/intake/start', {
         method: 'POST',
         body: JSON.stringify({ scenarioText: trimmedScenario }),
         token,
       });
 
-      router.push(`/decision/${decision.id}/analysis`);
+      if (intake.done) {
+        router.push(`/decision/${intake.decisionId}/analysis`);
+        return;
+      }
+
+      setDecisionId(intake.decisionId);
+      setCurrentQuestion(intake.question ?? null);
+      setCurrentAnswer('');
+      setHistory([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Analysis failed');
+      setError(err instanceof Error ? err.message : 'Failed to start intake');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAnswerSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!token || !decisionId) {
+      setError('Please sign in before continuing.');
+      return;
+    }
+    if (!currentQuestion) {
+      setError('No follow-up question available.');
+      return;
+    }
+    if (!isValidAnswer) {
+      setError('Please add a bit more detail (minimum 1 character).');
+      return;
+    }
+
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const response = await apiRequest<IntakeResponse>('/decisions/intake/answer', {
+        method: 'POST',
+        body: JSON.stringify({ decisionId, answer: trimmedAnswer }),
+        token,
+      });
+
+      setHistory((prev) => [
+        ...prev,
+        { question: currentQuestion, answer: trimmedAnswer },
+      ]);
+
+      if (response.done) {
+        router.push(`/decision/${response.decisionId}/analysis`);
+        return;
+      }
+
+      setCurrentQuestion(response.question ?? null);
+      setCurrentAnswer('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit answer');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -73,14 +114,7 @@ export default function NewDecisionPage() {
   }
 
   if (!user) {
-    return (
-      <div className="container section">
-        <h1 className="section-title">Sign in required</h1>
-        <p className="section-subtitle">
-          Please <Link href="/auth/login">sign in</Link> to create a decision.
-        </p>
-      </div>
-    );
+    return <div className="container section">Redirecting to sign in...</div>;
   }
 
   return (
@@ -89,9 +123,10 @@ export default function NewDecisionPage() {
         <section className="section">
           <h1 className="section-title">Describe your decision</h1>
           <p className="section-subtitle">
-            Give DIA the scenario in plain language. The system does the rest.
+            Give DIA the scenario in plain language. We will ask follow-up
+            questions to clarify the decision before analysis.
           </p>
-          <form className="form" onSubmit={handleSubmit}>
+          <form className="form" onSubmit={handleScenarioSubmit}>
             <div className="field">
               <label>Decision scenario</label>
               <textarea
@@ -101,6 +136,7 @@ export default function NewDecisionPage() {
                 placeholder="Job vs Higher Study vs Startup"
                 maxLength={1000}
                 required
+                disabled={Boolean(currentQuestion)}
               />
               <span className="tag">
                 {trimmedScenario.length}/1000 characters
@@ -110,27 +146,54 @@ export default function NewDecisionPage() {
             <button
               className="button primary"
               type="submit"
-              disabled={submitting || !isValidScenario}
+              disabled={submitting || !isValidScenario || Boolean(currentQuestion)}
             >
-              {submitting ? 'Analyzing...' : 'Run analysis'}
+              {submitting ? 'Starting intake...' : 'Start intake'}
             </button>
           </form>
 
-          {submitting && (
-            <div className="analysis-theatre">
-              <div className="steps">
-                {steps.map((step, index) => (
-                  <div
-                    key={step}
-                    className={`step ${index <= activeStep ? 'active' : ''}`}
-                  >
-                    <span>{step}</span>
+          {currentQuestion && (
+            <div className="intake">
+              <div className="intake-card">
+                <div className="intake-label">Follow-up question</div>
+                <div className="intake-question">{currentQuestion}</div>
+                <form className="form" onSubmit={handleAnswerSubmit}>
+                  <div className="field">
+                    <label>Your answer</label>
+                    <textarea
+                      className="textarea"
+                      value={currentAnswer}
+                      onChange={(event) => setCurrentAnswer(event.target.value)}
+                      placeholder="Share details that matter for this decision"
+                      maxLength={1000}
+                      required
+                    />
                     <span className="tag">
-                      {String(index + 1).padStart(2, '0')}
+                      {trimmedAnswer.length}/1000 characters
                     </span>
                   </div>
-                ))}
+                  <button
+                    className="button primary"
+                    type="submit"
+                    disabled={submitting || !isValidAnswer}
+                  >
+                    {submitting ? 'Submitting...' : 'Submit answer'}
+                  </button>
+                </form>
               </div>
+
+              {history.length > 0 && (
+                <div className="qa-stack">
+                  {history.map((entry, index) => (
+                    <div className="qa-item" key={`${entry.question}-${index}`}>
+                      <div className="qa-label">Question {index + 1}</div>
+                      <div className="qa-text">{entry.question}</div>
+                      <div className="qa-label">Answer</div>
+                      <div className="qa-text">{entry.answer}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>

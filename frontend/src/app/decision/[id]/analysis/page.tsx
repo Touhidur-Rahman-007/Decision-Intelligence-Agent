@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { OutcomeCards } from '@/components/OutcomeCards';
 import { RadarChart } from '@/components/RadarChart';
@@ -35,10 +35,11 @@ const progressSteps = [
 export default function AnalysisPage() {
   const params = useParams();
   const decisionId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-  const { token } = useAuth();
+  const router = useRouter();
+  const { token, user, loading } = useAuth();
   const [decision, setDecision] = useState<DecisionDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
   const [progressStep, setProgressStep] = useState(0);
@@ -50,7 +51,7 @@ export default function AnalysisPage() {
       }
 
       if (!silent) {
-        setLoading(true);
+        setPageLoading(true);
       }
 
       setError(null);
@@ -66,7 +67,7 @@ export default function AnalysisPage() {
         );
       } finally {
         if (!silent) {
-          setLoading(false);
+          setPageLoading(false);
         } else {
           setRefreshing(false);
         }
@@ -76,13 +77,21 @@ export default function AnalysisPage() {
   );
 
   useEffect(() => {
+    if (!loading && !user) {
+      const next = decisionId ? `/decision/${decisionId}/analysis` : '/dashboard';
+      router.replace(`/auth/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
     if (!token || !decisionId) {
-      setLoading(false);
       return;
     }
 
-    fetchDecision();
-  }, [token, decisionId, fetchDecision]);
+    const timeout = setTimeout(() => {
+      fetchDecision();
+    }, 0);
+
+    return () => clearTimeout(timeout);
+  }, [token, decisionId, fetchDecision, loading, user, router]);
 
   useEffect(() => {
     if (!decision || decision.status === 'completed' || decision.status === 'failed') {
@@ -103,7 +112,7 @@ export default function AnalysisPage() {
     }
 
     let index = 0;
-    setActiveSection(0);
+    const raf = requestAnimationFrame(() => setActiveSection(0));
     const interval = setInterval(() => {
       index += 1;
       setActiveSection(index);
@@ -112,7 +121,10 @@ export default function AnalysisPage() {
       }
     }, 800);
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(interval);
+    };
   }, [decision?.result]);
 
   useEffect(() => {
@@ -120,27 +132,23 @@ export default function AnalysisPage() {
       return;
     }
 
-    setProgressStep(0);
+    const raf = requestAnimationFrame(() => setProgressStep(0));
     const interval = setInterval(() => {
       setProgressStep((prev) => (prev + 1) % progressSteps.length);
     }, 700);
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(interval);
+    };
   }, [decision?.status]);
 
-  if (loading) {
+  if (pageLoading) {
     return <div className="container section">Loading analysis...</div>;
   }
 
-  if (!token) {
-    return (
-      <div className="container section">
-        <h1 className="section-title">Sign in required</h1>
-        <p className="section-subtitle">
-          Please sign in to view this decision analysis.
-        </p>
-      </div>
-    );
+  if (!token || !user) {
+    return <div className="container section">Redirecting to sign in...</div>;
   }
 
   if (error) {

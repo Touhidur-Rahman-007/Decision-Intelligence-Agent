@@ -8,18 +8,35 @@ import { useAuth } from '@/lib/auth';
 export default function LoginPage() {
   const router = useRouter();
   const { login, loading } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const trimmedUsername = username.trim();
+  const isValidUsername = /^[a-zA-Z0-9_]{3,20}$/.test(trimmedUsername);
+  const isValidPassword = password.length >= 6 && password.length <= 64;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    setUsernameError(null);
+    setPasswordError(null);
+
+    if (!isValidUsername) {
+      setUsernameError('Username must be 3-20 characters (letters, numbers, _).');
+    }
+    if (!isValidPassword) {
+      setPasswordError('Password must be 6-64 characters.');
+    }
+    if (!isValidUsername || !isValidPassword) {
+      return;
+    }
     setSubmitting(true);
 
     try {
-      await login(email, password);
+      await login(trimmedUsername, password);
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -38,14 +55,15 @@ export default function LoginPage() {
           </p>
           <form className="form section-card" onSubmit={handleSubmit}>
             <div className="field">
-              <label>Email</label>
+              <label>Username</label>
               <input
                 className="input"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
                 required
               />
+              {usernameError && <p className="field-error">{usernameError}</p>}
             </div>
             <div className="field">
               <label>Password</label>
@@ -56,6 +74,7 @@ export default function LoginPage() {
                 onChange={(event) => setPassword(event.target.value)}
                 required
               />
+              {passwordError && <p className="field-error">{passwordError}</p>}
             </div>
             {error && <p style={{ color: '#b42318' }}>{error}</p>}
             <button

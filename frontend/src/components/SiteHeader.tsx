@@ -4,14 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
-const publicLinks = [
-  { href: '/', label: 'Home' },
-];
+const publicLinks: Array<{ href: string; label: string }> = [];
 
-const userLinks = [
-  { href: '/decision/new', label: 'New decision' },
-  { href: '/dashboard', label: 'Dashboard' },
-];
+const userLinks: Array<{ href: string; label: string }> = [];
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -44,7 +39,6 @@ export function SiteHeader() {
             <span className="tag">Loading</span>
           ) : user ? (
             <>
-              <span className="nav-user">{user.name}</span>
               <button className="button ghost" type="button" onClick={logout}>
                 Sign out
               </button>

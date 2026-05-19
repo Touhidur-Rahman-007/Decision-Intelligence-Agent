@@ -8,19 +8,42 @@ import { useAuth } from '@/lib/auth';
 export default function RegisterPage() {
   const router = useRouter();
   const { register, loading } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const trimmedUsername = username.trim();
+  const isValidUsername = /^[a-zA-Z0-9_]{3,20}$/.test(trimmedUsername);
+  const isValidPassword = password.length >= 6 && password.length <= 64;
+  const passwordsMatch = password === confirmPassword;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    setUsernameError(null);
+    setPasswordError(null);
+    setConfirmError(null);
+
+    if (!isValidUsername) {
+      setUsernameError('Username must be 3-20 characters (letters, numbers, _).');
+    }
+    if (!isValidPassword) {
+      setPasswordError('Password must be 6-64 characters.');
+    }
+    if (!passwordsMatch) {
+      setConfirmError('Passwords do not match.');
+    }
+    if (!isValidUsername || !isValidPassword || !passwordsMatch) {
+      return;
+    }
     setSubmitting(true);
 
     try {
-      await register(name, email, password);
+      await register(trimmedUsername, password);
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -39,23 +62,15 @@ export default function RegisterPage() {
           </p>
           <form className="form section-card" onSubmit={handleSubmit}>
             <div className="field">
-              <label>Name</label>
+              <label>Username</label>
               <input
                 className="input"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                autoComplete="username"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
                 required
               />
-            </div>
-            <div className="field">
-              <label>Email</label>
-              <input
-                className="input"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-              />
+              {usernameError && <p className="field-error">{usernameError}</p>}
             </div>
             <div className="field">
               <label>Password</label>
@@ -66,6 +81,18 @@ export default function RegisterPage() {
                 onChange={(event) => setPassword(event.target.value)}
                 required
               />
+              {passwordError && <p className="field-error">{passwordError}</p>}
+            </div>
+            <div className="field">
+              <label>Confirm password</label>
+              <input
+                className="input"
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                required
+              />
+              {confirmError && <p className="field-error">{confirmError}</p>}
             </div>
             {error && <p style={{ color: '#b42318' }}>{error}</p>}
             <button

@@ -8,8 +8,8 @@ type AuthContextValue = {
   user: UserProfile | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -23,11 +23,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stored = window.localStorage.getItem('dia_token');
     if (!stored) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
 
-    setToken(stored);
+    queueMicrotask(() => setToken(stored));
     apiRequest<UserProfile>('/users/me', { token: stored })
       .then((profile) => setUser(profile))
       .catch(() => {
@@ -37,13 +37,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     const result = await apiRequest<{
       user: UserProfile;
       accessToken: string;
     }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
 
     window.localStorage.setItem('dia_token', result.accessToken);
@@ -51,13 +51,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (username: string, password: string) => {
     const result = await apiRequest<{
       user: UserProfile;
       accessToken: string;
     }>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ username, password }),
     });
 
     window.localStorage.setItem('dia_token', result.accessToken);

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
@@ -13,28 +17,28 @@ export class AuthService {
   ) {}
 
   async register(payload: RegisterDto) {
-    const email = this.normalizeEmail(payload.email);
-    const existing = await this.usersService.findByEmail(email);
+    const username = this.normalizeUsername(payload.username);
+    const existing = await this.usersService.findByUsername(username);
     if (existing) {
-      throw new BadRequestException('Email already in use');
+      throw new BadRequestException('Username already in use');
     }
 
     const hashedPassword = await bcrypt.hash(payload.password, 10);
     const user = await this.usersService.createUser({
-      name: payload.name,
-      email,
+      name: username,
+      username,
       hashedPassword,
     });
 
     return {
       user: this.usersService.toSafeUser(user),
-      accessToken: this.signToken(user.id, user.email, user.role),
+      accessToken: this.signToken(user.id, user.username, user.role),
     };
   }
 
   async login(payload: LoginDto) {
-    const email = this.normalizeEmail(payload.email);
-    const user = await this.usersService.findByEmail(email);
+    const username = this.normalizeUsername(payload.username);
+    const user = await this.usersService.findByUsername(username);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -46,15 +50,15 @@ export class AuthService {
 
     return {
       user: this.usersService.toSafeUser(user),
-      accessToken: this.signToken(user.id, user.email, user.role),
+      accessToken: this.signToken(user.id, user.username, user.role),
     };
   }
 
-  private signToken(id: string, email: string, role: string) {
-    return this.jwtService.sign({ sub: id, email, role });
+  private signToken(id: string, username: string, role: string) {
+    return this.jwtService.sign({ sub: id, username, role });
   }
 
-  private normalizeEmail(email: string) {
-    return email.trim().toLowerCase();
+  private normalizeUsername(username: string) {
+    return username.trim().toLowerCase();
   }
 }
