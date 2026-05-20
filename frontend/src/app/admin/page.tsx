@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -15,9 +16,10 @@ export default function AdminPage() {
   const [decisions, setDecisions] = useState<AdminDecision[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const hasBackendAdmin = Boolean(token && user?.role === 'admin');
 
   useEffect(() => {
-    if (!token || user?.role !== 'admin') {
+    if (!hasBackendAdmin) {
       return;
     }
 
@@ -53,15 +55,21 @@ export default function AdminPage() {
     return () => {
       isActive = false;
     };
-  }, [token, user]);
+  }, [hasBackendAdmin, token]);
 
-  if (!user || user.role !== 'admin') {
+  const apiProviderName = 'Groq';
+  const llmModelName = 'llama-3.3-70b-versatile';
+
+  if (!hasBackendAdmin) {
     return (
       <div className="container section">
         <h1 className="section-title">Admin only</h1>
         <p className="section-subtitle">
-          You do not have access to this dashboard.
+          Please sign in as admin to access this dashboard.
         </p>
+        <Link className="button primary" href="/admin/login">
+          Admin login
+        </Link>
       </div>
     );
   }
@@ -75,6 +83,30 @@ export default function AdminPage() {
         </p>
         {loading && <p className="section-subtitle">Loading data...</p>}
         {error && <p style={{ color: '#b42318' }}>{error}</p>}
+        <div className="grid">
+          <div className="card">
+            <h3>API provider</h3>
+            <p style={{ color: 'var(--muted)' }}>{apiProviderName}</p>
+          </div>
+          <div className="card">
+            <h3>LLM model</h3>
+            <p style={{ color: 'var(--muted)' }}>{llmModelName}</p>
+          </div>
+        </div>
+        <div className="section" style={{ padding: 0 }}>
+          <h2 className="section-title">Users</h2>
+          <div className="grid">
+            {users.map((profile) => (
+              <div key={profile.id} className="card">
+                <span className={`status-pill ${profile.role === 'admin' ? 'completed' : 'pending'}`}>
+                  {profile.role}
+                </span>
+                <h3>{profile.name}</h3>
+                <p style={{ color: 'var(--muted)' }}>@{profile.username}</p>
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="grid">
           {decisions.map((decision) => (
             <div key={decision.id} className="card">

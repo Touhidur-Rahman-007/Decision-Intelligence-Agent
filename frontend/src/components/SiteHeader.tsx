@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
-const publicLinks: Array<{ href: string; label: string }> = [];
+const publicLinks: Array<{ href: string; label: string }> = [
+  { href: '/admin/login', label: 'Admin' },
+];
 
 const userLinks: Array<{ href: string; label: string }> = [
-  { href: '/dashboard', label: 'Dashboard' }
+  { href: '/dashboard', label: 'Dashboard' },
 ];
 
 export function SiteHeader() {
@@ -16,7 +18,7 @@ export function SiteHeader() {
 
   const links = user ? [...publicLinks, ...userLinks] : publicLinks;
   if (user?.role === 'admin') {
-    links.push({ href: '/admin', label: 'Admin' });
+    links.push({ href: '/admin', label: 'Admin panel' });
   }
 
   return (
@@ -49,9 +51,6 @@ export function SiteHeader() {
             <>
               <Link className="button ghost" href="/auth/login">
                 Sign in
-              </Link>
-              <Link className="button primary" href="/auth/register">
-                Get started
               </Link>
             </>
           )}
