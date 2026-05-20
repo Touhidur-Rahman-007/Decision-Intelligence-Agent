@@ -86,6 +86,9 @@ export default function LoginPage() {
               {submitting ? 'Signing in...' : 'Sign in'}
             </button>
             <p className="section-subtitle">
+              <Link href="/auth/forgot">Forgot password?</Link>
+            </p>
+            <p className="section-subtitle">
               New here? <Link href="/auth/register">Create an account</Link>
             </p>
           </form>

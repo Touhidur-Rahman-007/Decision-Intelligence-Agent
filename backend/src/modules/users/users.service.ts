@@ -39,6 +39,10 @@ export class UsersService {
     return this.usersRepo.find({ order: { createdAt: 'DESC' } });
   }
 
+  async updatePassword(id: string, hashedPassword: string): Promise<void> {
+    await this.usersRepo.update({ id }, { hashedPassword });
+  }
+
   toSafeUser(user: User) {
     return {
       id: user.id,
