@@ -17,8 +17,8 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const trimmedUsername = username.trim();
-  const isValidUsername = /^[a-zA-Z0-9_]{3,20}$/.test(trimmedUsername);
-  const isValidPassword = password.length >= 6 && password.length <= 64;
+  const isValidUsername = /^[a-zA-Z0-9_]{3,80}$/.test(trimmedUsername);
+  const isValidPassword = password.length >= 8 && password.length <= 128;
   const passwordsMatch = password === confirmPassword;
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -29,10 +29,10 @@ export default function RegisterPage() {
     setConfirmError(null);
 
     if (!isValidUsername) {
-      setUsernameError('Username must be 3-20 characters (letters, numbers, _).');
+      setUsernameError('Username must be 3-80 characters (letters, numbers, _).');
     }
     if (!isValidPassword) {
-      setPasswordError('Password must be 6-64 characters.');
+      setPasswordError('Password must be 8-128 characters.');
     }
     if (!passwordsMatch) {
       setConfirmError('Passwords do not match.');
@@ -76,7 +76,8 @@ export default function RegisterPage() {
               <label>Password</label>
               <input
                 className="input"
-                type="password"
+                type="text"
+                autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -87,7 +88,8 @@ export default function RegisterPage() {
               <label>Confirm password</label>
               <input
                 className="input"
-                type="password"
+                type="text"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 required

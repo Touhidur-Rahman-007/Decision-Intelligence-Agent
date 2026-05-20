@@ -15,8 +15,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const trimmedUsername = username.trim();
-  const isValidUsername = /^[a-zA-Z0-9_]{3,20}$/.test(trimmedUsername);
-  const isValidPassword = password.length >= 6 && password.length <= 64;
+  const isValidUsername = /^[a-zA-Z0-9_]{3,80}$/.test(trimmedUsername);
+  const isValidPassword = password.length >= 8 && password.length <= 128;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -25,10 +25,10 @@ export default function LoginPage() {
     setPasswordError(null);
 
     if (!isValidUsername) {
-      setUsernameError('Username must be 3-20 characters (letters, numbers, _).');
+      setUsernameError('Username must be 3-80 characters (letters, numbers, _).');
     }
     if (!isValidPassword) {
-      setPasswordError('Password must be 6-64 characters.');
+      setPasswordError('Password must be 8-128 characters.');
     }
     if (!isValidUsername || !isValidPassword) {
       return;
@@ -69,7 +69,8 @@ export default function LoginPage() {
               <label>Password</label>
               <input
                 className="input"
-                type="password"
+                type="text"
+                autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
